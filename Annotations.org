@@ -1,0 +1,27 @@
+* Annotations and comments on the specification
+
+** 4. Obtaining Authorization
+
+*** 4.1. Authorization Code Grant
+
+**** 4.1.1. Authorization Request
+
+**** 4.1.2. Authorization Response
+
+> When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
+
+As long as neither the protocol for accessing protected resources nor determining if an access token is valid is specified in the specification it's impossible to test if an access token is revoked or not.
+
+***** 4.1.2.1 Error Response
+
+> The authorization server SHOULD inform the resource owner on certain errors
+
+How? Phone call? Email? It's impossible to test if the authorization server really informs the user since the way to inform the user isn't specified.
+
+*** 4.2. Implicit Grant
+
+** 5. Issuing an Access Token
+
+*** 5.1. Successful Response
+
+*** 5.2. Error Response

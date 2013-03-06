@@ -1,0 +1,371 @@
+1. Introduction (p.4)
+	1.1. Roles (p.6)
+	1.2. Protocol Flow (p.7)
+	1.3. Authorization Grant (p.8)
+		1.3.1. Authorization Code (p.8)
+		1.3.2. Implicit (p.8)
+		1.3.3. Resource Owner Password Credentials (p.9)
+		1.3.4. Client Credentials (p.9)
+	1.4. Access Token (p.10)
+	1.5. Refresh Token (p.10)
+	1.6. TLS Version (p.12)
+	1.7. HTTP Redirections (p.12)
+	1.8. Interoperability (p.12)
+	1.9. Notational Conventions (p.13)
+2. Client Registration (p.13)
+	: The client developer SHALL, when registering a client, specify the client type as described in Section 2.1.
+	: The client developer SHALL, when registering a client, provide its client redirection URIs as described in Section 3.1.2.
+	: The client developer SHALL, when registering a client, include any other information required by the authorization server (e.g., application name, website, description, logo image, the acceptance of legal terms).
+	2.1. Client Types (p.14)
+		: The authorization server SHOULD NOT make assumptions about the client type.
+		: The client SHOULD register each component of the client as a separate client.
+	2.2. Client Identifier (p.15)
+		: The client identifier MUST NOT be used alone for client authentication.
+		: The authorization server SHOULD document the size of any identifier it issues.
+		: (The client should avoid making assumptions about the identifier size.)
+	2.3. Client Authentication (p.16)
+		: The authorization server MAY accept any form of client authentication meeting its security requirements.
+		: The authorization server MAY establish a client authentication method with public clients.
+		: The authorization server MUST NOT rely on public client authentication for the purpose of identifying the client.
+		: The client MUST NOT use more than one authentication method in each request.
+		2.3.1. Client Password (p.16)
+			: Clients in possession of a client password MAY use the HTTP Basic authentication scheme as defined in [RFC2617] to authenticate with the authorization server.
+			: The authorization server MUST support the HTTP Basic authentication scheme for authenticating clients that were issued a client password.
+			: The authorization server MAY support including the client credentials in the request-body.
+			: The client MAY omit the client_secret parameter if the client secret is an empty string.
+			: Including client credentials in the request-body is NOT RECOMMENDED and SHOULD be limited to clients unable to directly utilize the HTTP Basic authentication scheme (or other password-based HTTP authentication schemes).
+			: The client credential parameters can only be transmitted in the request-body and MUST NOT be included in the request URI.
+			: The authorization server MUST require the use of TLS as described in Section 1.6 when sending requests using password authentication.
+			: The authorization server MUST protect any endpoint utilizing it against brute force attacks when the client authentication method involves a password.
+		2.3.2. Other Authentication Methods (p.17)
+			: The authorization server MAY support any suitable HTTP authentication scheme matching its security requirements.
+			: When using other authentication methods than (suitable) HTTP authentication, the authorization server MUST define a mapping between the client identifier (registration record) and authentication scheme.
+	2.4. Unregistered Clients (p.17)
+3. Protocol Endpoints (p.18)
+	: Extension grant types MAY define additional endpoints as needed.
+	3.1. Authorization Endpoint (p.18)
+		: The authorization server MUST first verify the identity of the resource owner.
+		: The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component ([RFC3986] Section 3.4).
+		: If the endpoint URI includes a query component, this MUST be retained when adding additional query parameters.
+		: The endpoint URI MUST NOT include a fragment component.
+		: The authorization server MUST require the use of TLS as described in Section 1.6 when sending requests to the authorization endpoint (since requests result in user authentication and the transmission of clear-text credentials).
+		: The authorization server MUST support the use of the HTTP "GET" method [RFC2616] for the authorization endpoint.
+		: The authorization server MAY support the use of the HTTP "POST" method for the authorization endpoint.
+		: Parameters sent without a value MUST be treated as if they were omitted from the request.
+		: The authorization server MUST ignore unrecognized request parameters.
+		: Request and response parameters MUST NOT be included more than once.
+		3.1.1. Response Type (p.19)
+			: The client MUST use one of "code" or "token" when informing the authorization server of the desired grant type via the parameter response_type.
+			: Extension response types MAY contain a space-delimited (%x20) list of values, where the order of values does not matter (e.g., response type "a b" is the same as "b a").
+			: If an authorization request is missing the "response_type" parameter, or if the response type is not understood, the authorization server MUST return an error response as described in Section 4.1.2.1.
+		3.1.2. Redirection Endpoint (p.19)
+			: The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3.
+			: The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component ([RFC3986] Section 3.4).
+			: If the endpoint URI includes a query component, this MUST be retained when adding additional query parameters.
+			: The endpoint URI MUST NOT include a fragment component.
+			3.1.2.1 Endpoint Request Confidentiality
+				: The redirection endpoint SHOULD require the use of TLS as described in Section 1.6 when the requested response type is "code" or "token", or when the redirection request will result in the transmission of sensitive credentials over an open network.
+				: If TLS is not available, the authorization server SHOULD warn the resource owner about the insecure endpoint prior to redirection (e.g., display a message during the authorization request).
+			3.1.2.2 Registration Requirements
+				: The authorization server MUST require public clients to register their redirection endpoint.
+				: The authorization server MUST require confidential clients utilizing the implicit grant type to register their redirection endpoint.
+				: The authorization server SHOULD require all clients to register their redirection endpoint prior to utilizing the authorization endpoint.
+				: The authorization server SHOULD require the client to provide the complete redirection URI when the client is registering.
+				: The client MAY use the "state" request parameter to achieve per-request customization of their redirection endpoint.
+				: The authorization server SHOULD require the registration of the URI scheme, authority and path (approving the client to dynamically vary only the query component of the redirection URI when requesting authorization if registering the complete URI is not possible.
+				: The authorization server MAY allow the client to register multiple redirection endpoints.
+			3.1.2.3 Dynamic Configuration
+				: If multiple redirection URIs have been registered, if only part of the redirection URI has been registered, or if no redirection URI has been registered, the client MUST include a redirection URI with the authorization request using the "redirect_uri" request parameter. 
+				: When a redirection URI is included in an authorization request, the authorization server MUST compare and match the value received against at least one of the registered redirection URIs (or URI components) as defined in [RFC3986] Section 6, if any redirection URIs were registered.
+				: If the client registration included the full redirection URI, the authorization server MUST compare the two URIs using simple string comparison as defined in [RFC3986] Section 6.2.1.
+			3.1.2.4 Invalid Endpoint
+				: If an authorization request fails validation due to a missing, invalid, or mismatching redirection URI, the authorization server SHOULD inform the resource owner of the error.
+				: If an authorization request fails validation due to a missing, invalid, or mismatching redirection URI, the authorization server MUST NOT automatically redirect the user-agent to the invalid redirection URI.
+			3.1.2.5 Endpoint Content
+				: The client SHOULD NOT include any third-party scripts (e.g., third- party analytics, social plug-ins, ad networks) in the redirection endpoint response.
+				: The client SHOULD extract the credentials from the URI and redirect the user-agent again to another endpoint without exposing the credentials (in the URI or elsewhere).
+				: If third-party script are included, the client MUST ensure that its own scripts (used to extract and remove the credentials from the URI) will execute first.
+	3.2. Token Endpoint (p.21)
+		: The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component ([RFC3986] Section 3.4).
+		: If the endpoint URI includes a query component, this MUST be retained when adding additional query parameters.
+		: The endpoint URI MUST NOT include a fragment component.
+		: The authorization server MUST require the use of TLS as described in Section 1.6 when sending requests to the token endpoint (since requests result in user authentication and the transmission of clear-text credentials).
+		: The client MUST support the use of the HTTP "POST" method when making access token requests.
+		: Parameters sent without a value MUST be treated as if they were omitted from the request.
+		: The authorization server MUST ignore unrecognized request parameters.
+		: Request and response parameters MUST NOT be included more than once.
+		3.2.1. Client Authentication (p.22)
+			: Confidential clients of other clients issued client credentials MUST authenticate with the authorization server as described in Section 2.3 when making requests to the token endpoint.
+			: A client MAY use the "client_id" request parameter to identify itself when sending requests to the token endpoint.
+			: In the "authorization_code" "grant_type" request to the token endpoint, an unauthenticated client MUST send its "client_id" to prevent itself from inadvertently accepting a code intended for a client with a different "client_id".
+	3.3. Access Token Scope (p.23)
+		: The authorization server MAY fully or partially ignore the scope requested by the client, based on the authorization server policy or the resource owner's instructions.
+		: If the issued access token scope is different from the one requested by the client, the authorization server MUST include the "scope" response parameter to inform the client of the actual scope granted.
+		: If the client omits the scope parameter when requesting authorization, the authorization server MUST either process the request using a pre-defined default value or fail the request indicating an invalid scope.
+		: The authorization server SHOULD document its scope requirements and default value (if defined).
+4. Obtaining Authorization (p.23)
+	4.1. Authorization Code Grant (p.24)
+		: The client MUST be capable of interacting with the resource owner's user-agent (typically a web browser) and capable of receiving incoming requests (via redirection) from the authorization server.
+		4.1.1. Authorization Request (p.25)
+			: The "response_type" parameter value MUST be set to "code" when the client constructs the request URI by adding parameters to the query component of the authorization endpoint URI.
+			: The "client_id" parameter is REQUIRED.
+			: The "scope" parameter is OPTIONAL when the client constructs the request URI by adding parameters to the query component of the authorization endpoint URI.
+			: The "state" parameter is RECOMMENDED when the client constructs the request URI by adding parameters to the query component of the authorization endpoint URI.
+			: The "state" parameter SHOULD be used for preventing cross-site request forgery when the client constructs the request URI by adding parameters to the query component of the authorization endpoint URI.
+		4.1.2. Authorization Response (p.26)
+			[X] The "code" parameter is REQUIRED in the authorization response if the authorization server issues an authorization code.
+			: The authorization code MUST expire shortly after it is issued (to mitigate the risk of leaks).
+			: A maximum authorization code lifetime of 10 minutes is RECOMMENDED.
+			: The client MUST NOT use the authorization code more than once.
+			[X] If an authorization code is used more than once, the authorization server MUST deny the request.
+			: If an authorization code is used more than once, the authorization server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
+			[X] The "state" parameter is REQUIRED if the parameter was present in the client authorization request.
+			: The client MUST ignore unrecognized response parameters.
+			: The authorization server SHOULD document the size of any value it issues.
+			4.1.2.1 Error Response
+				: If the request fails due to a missing, invalid, or mismatching redirection URI, or if the client identifier is missing or invalid, the authorization server SHOULD inform the resource owner of the error.
+				[_] If the request fails due to a missing, invalid, or mismatching redirection URI, or if the client identifier is missing or invalid, the authorization server MUST NOT automatically redirect the user-agent to the invalid redirection URI.
+					 Kolla implementation i oidc
+				[_] The "error" parameter is REQUIRED when the authorization server informs the client of a request failure for other reason than a missing or invalid redirection URI.
+					 Hard to test without something that generates that error
+				[_] Values for the "error" parameter MUST NOT include characters outside the set 0%x20-21 / %x23-5B / %x5D-7E.
+				: The "error_description" parameter is OPTIONAL when informing the client about a request failure for other reason than a missing or invalid redirection URI.
+				: Values for the "error_description" parameter MUST NOT include characters outside the set 0%x20-21 / %x23-5B / %x5D-7E.
+				: The "error_uri" parameter is OPTIONAL when informing the client about a request failure for other reason than a missing or invalid redirection URI.
+				: Values for the "error_uri" parameter MUST conform to the URI-reference syntax.
+				: Values for the "error_uri" parameter MUST NOT include characters outside the set 0%x20-21 / %x23-5B / %x5D-7E.
+				[X] The "state" parameter is REQUIRED if a "state" parameter was present in the client authorization request.
+		4.1.3. Access Token Request (p.29)
+			[?] The "grant_type" parameter is REQUIRED when the client makes a request to the token endpoint.
+				 How to remove a parameter from the outgoing message?
+				 Inherit?
+				 None is none
+			[_] The value of the "grant_type" parameter MUST be set to "authorization_code".
+				 What should the authorization server do if this parameter
+				 has something strange? Return an error response?
+			[_] The "code" parameter is REQUIRED when the client makes a request to the token endpoint.
+				 Return Error response if this parameter is missing?
+			[_] The "redirect_uri" parameter is REQUIRED when the client makes a request to the token endpoint and the "redirect_uri" parameter was included in the authorization request.
+			[_] If the "redirect_uri" parameter was included in the authorization request (as described in Section 4.1.1) their values MUST be identical.
+			[_] The "client_id" parameter is REQUIRED if the client is not authenticating with the authorization server as described in Section 3.2.1.
+			[_] If the client type is confidential or the client was issued client credentials (or assigned other authentication requirements), the client MUST authenticate with the authorization server as described in Section 3.2.1.
+			[_] The authorization server MUST require client authentication for confidential clients or for any client that was issued client credentials (or with other authentication requirements).
+			[_] The authorization server MUST authenticate the client if client authentication is included.
+			[_] The authorization server MUST ensure that the authorization code was issued to the authenticated confidential client, or if the client is public, ensure that the code was issued to "client_id" in the request.
+			[_] The authorization server MUST verify that the authorization code is valid.
+			[_] The authorization server MUST ensure that the "redirect_uri" parameter is present if the "redirect_uri" parameter was included in the initial authorization request as described in Section 4.1.1, and if included ensure that their values are identical.
+		4.1.4. Access Token Response (p.30)
+	4.2. Implicit Grant (p.31)
+		4.2.1. Authorization Request (p.33)
+			: The "response_type" parameter is REQUIRED when the client forms the query component of the authorization endpoint URI.
+			: The value of the "response_type" parameter MUST be set to "token".
+			: The "client_id" parameter is REQUIRED when the client forms the query component of the authorization endpoint URI.
+			: The "redirect_uri" parameter is OPTIONAL when the client forms the query component of the authorization endpoint URI.
+			: The "scope" parameter is OPTIONAL when the client forms the query component of the authorization endpoint URI.
+			: The "state" parameter is RECOMMENDED when the client forms the query component of the authorization endpoint URI.
+			: The "state" parameter SHOULD be used for preventing cross-site request forgery as described in Section 10.12.
+			: The authorization server MUST verify that the redirection URI to which it will redirect the access token matches a redirection URI registered by the client as described in Section 3.1.2.
+		4.2.2. Access Token Response (p.35)
+			: The "access_token" parameter is REQUIRED when the authorization server issues an access token and delivers it to the client.
+			: The "token_type" parameter is REQUIRED when the authorization server issues an access token and delivers it to the client.
+			: The "expires_in" parameter is RECOMMENDED when the authorization server issues an access token and delivers it to the client.
+			: The authorization server SHOULD provide the expiration time via other means or document the default value if the "expires_in" parameter is omitted.
+			: The "scope" parameter is OPTIONAL when the authorization server issues an access token and delivers it to the client if the scope is identical to the scope requested by the client.
+			: The "scope" parameter is REQUIRED if the scope is different than the scope required by the client.
+			: The "state" parameter is REQUIRED if the "state" parameter was present in the client authorization request when the authorization server issues an access token and delivers it to the client. The exact value should be identical to the value received from the client.
+			: The authorization server MUST NOT issue a refresh token.
+			: The client MUST ignore unrecognized response parameters.
+			: (The client should avoid making assumptions about value sizes.)
+			: The authorization server SHOULD document the size of any value it issues.
+			4.2.2.1 Error Response
+				: The authorization server SHOULD inform the resource owner of the error if the request fails due to invalid or missing information.
+				: The authorization server MUST NOT automatically redirect the user-agent to the invalid redirection URI if the request fails due to invalid or missing information.
+				: The "error" parameter is REQUIRED when the authorization server informs the client after the resource owner denies the access request or if the request fails for reasons other than missing or invalid redirection URI.
+				: Values for the "error" parameter MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+				: The "error_description" parameter is OPTIONAL when informing the client after a failed request.
+				: Values for the "error_description" parameter MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+				: The "error_uri" parameter is OPTIONAL when informing the client after a failed request.
+				: Values for the "error_uri" parameter MUST conform to the URI-reference syntax.
+				: Values for the "error_uri" parameter MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+				: The "state" parameter is REQUIRED when the authorization server informs the client after the resource owner denies the access request or if the request fails for reasons other than missing or invalid redirection URI if a "state" parameter was present in the client authorization request.
+	4.3. Resource Owner Password Credentials Grant (p.37)
+		: (The authorization server should take special care when enabling this grant type and only allow it when other flows are not viable.)
+		4.3.1. Authorization Request and Response (p.39)
+			: The client MUST discard the credentials once an access token has been obtained.
+		4.3.2. Access Token Request (p.39)
+			: The "grant_type" parameter is REQUIRED when the client makes a request to the token endpoint.
+			: The value of the "grant_type" parameter MUST be set to "password".
+			: The "username" parameter is REQUIRED when the client makes a request to the token endpoint.
+			: The "password" parameter is REQUIRED when the client makes a request to the token endpoint.
+			: The "scope" parameter is OPTIONAL when the client makes a request to the token endpoint.
+			: If the client type is confidential or the client was issued client credentials (or assigned other authentication requirements), the client MUST authenticate with the authorization server as described in Section 3.2.1.
+			: The authorization server MUST require client authentication for confidential clients or for any client that was issued client credentials (or with other authentication requirements).
+			: The authorization server MUST authenticate the client if client authentication is included.
+			: The authorization server MUST validate the resource owner password credentials using its existing password validation algorithm.
+			: Since this access token request utilizes the resource owner's password, the authorization server MUST protect the endpoint against brute force attacks (e.g., using rate-limitation or generating alerts).
+		4.3.3. Access Token Response (p.40)
+	4.4. Client Credentials Grant (p.40)
+		: The client credentials grant type MUST only be used by confidential clients.
+		4.4.1. Authorization Request and Response (p.41)
+		4.4.2. Access Token Request (p.41)
+			: The "grant_type" parameter is REQUIRED when a client does a request.
+			: The value of the "grant_type" parameter MUST be set to "client_credentials" when a client requests a client credentials grant.
+			: The value of the "scope" parameter is OPTIONAL.
+			: The client MUST authenticate with the authorization server as described in Section 3.2.1.
+			: The authorization server MUST authenticate the client.
+		4.4.3. Access Token Response (p.42)
+			: A refresh token SHOULD NOT be included.
+	4.5. Extension Grants (p.42)
+5. Issuing an Access Token (p.43)
+	5.1. Successful Response (p.43)
+		: The "access_token" parameter is REQUIRED in the response from a successful request.
+		: The "token_type" parameter is REQUIRED in the response from a successful request.
+		: The "expires_in" parameter is RECOMMENDED in the response from a successful request.
+		: The authorization server SHOULD provide the expiration time via other means or document default vaule if the "expires_in" parameter is omitted.
+		: The "refresh_token" parameter is OPTIONAL in the response from a successful request.
+		: The "scope" parameter is OPTIONAL in the response from a successful request if the scope is identical to the scope requested by the client.
+		[_]The "scope" parameter is REQUIRED in the response from a successful request if the scope is different to the scope requested by the client.
+		[_] The authorization server MUST include the HTTP "Cache-Control" response header field [RFC2616] with a value of "no-store" in any response containing tokens, credentials, or other sensitive information, as well as the "Pragma" response header field [RFC2616] with a value of "no-cache".
+		: The client MUST ignore unrecognized value names in the response.
+		: (The client should avoid making assumptions about value sizes.)
+		: The authorization server SHOULD document the size of any value it issues.
+	5.2. Error Response (p.45)
+		: The "error" parameter is REQUIRED in the response from the authorization server to a bad request.
+		: The authorization server MAY return an HTTP 401 status code to a bad request to indicate which HTTP authentication  schemes are supported.
+		: If the client attempted to authenticate via the "Authorization" request header field, the authorization server MUST respond with an HTTP 401 (Unauthorized) status code and include the "WWW-Authenticate" response header field matching the authentication scheme used by the client.
+		: Values for the "error" parameter MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+		: The "error_description" parameter is OPTIONAL in the response from the authorization server to a bad request.
+		: Values for the "error_description" parameter MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+		: The "error_uri" parameter is REQUIRED in the response from the authorization server to a bad request.
+		: Values for the "error_uri" parameter MUST conform to the URI-reference syntax.
+		: Values for the "error_uri" parameter MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+6. Refreshing an Access Token (p.47)
+	: The "grant_type" parameter is REQUIRED when the client does a refresh request to the token endpoint.
+	: The value of the "grant_type" parameter MUST be set to "refresh_token" when the client does a refresh request to the token endpoint.
+	: The "refresh_token" parameter is REQUIRED when the client does a refresh request to the token endpoint.
+	: The "scope" parameter is OPTIONAL when the client does a refresh request to the token endpoint.
+	: The requested scope MUST NOT include any scope not originally granted by the resource owner.
+	: If the client type is confidential or the client was issued client credentials (or assigned other authentication requirements), the client MUST authenticate with the authorization server as described in Section 3.2.1.
+	: The authorization server MUST require client authentication for confidential clients or for any client that was issued client credentials (or with other authentication requirements).
+	: The authorization server MUST authenticate the client if client authentication is included and ensure that the refresh token was issued to the authenticated client.
+	: The authorization server MUST validate the refresh token.
+	: The authorization server MAY issue a new refresh token.
+	: If the authorization server issues a new refresh token the client MUST discard the old refresh token and replace it with the new refresh token.
+	: The authorization server MAY revoke the old refresh token after issuing a new refresh token to the client.
+	: If a new refresh token is issued, the refresh token scope MUST be identical to that of the refresh token included by the client in the request.
+7. Accessing Protected Resources (p.48)
+	: The resource server MUST validate the access token and ensure that it has not expired and that its scope covers the requested resource.
+	7.1. Access Token Types (p.49)
+		: The client MUST NOT use an access token if it does not understand the token type.
+	7.2. Error Response (p.49)
+		: If a resource access request fails, the resource server SHOULD inform the client of the error.
+		: New authentication schemes designed primarily for OAuth token authentication SHOULD define a mechanism for providing an error status code to the client, in which the error values allowed are registered in the error registry established by this specification.
+		: New authentication schemes MAY limit the set of valid error codes to a subset of the registered values.
+		: If the error code is returned using a named parameter, the parameter name SHOULD be "error".
+		: Other schemes capable of being used for OAuth token authentication, but not primarily designed for that purpose, MAY bind their error values to the registry in the same manner.
+		: New authentication schemes MAY choose to also specify the use of the "error_description" and "error_uri" parameters to return error information in a manner parallel to their usage in this specification.
+8. Extensibility (p.50)
+	8.1. Defining Access Token Types (p.50)
+		: Types utilizing a URI name SHOULD be limited to vendor-specific implementations that are not commonly applicable, and are specific to the implementation details of the resource server where they are used.
+		: All types not using a URI name MUST be registered.
+		: Type names MUST conform to the type-name ABNF.
+		: If the type definition includes a new HTTP authentication scheme, the type name SHOULD be identical to the HTTP authentication scheme name (as defined by [RFC2617]).
+	8.2. Defining New Endpoint Parameters (p.50)
+		: Parameter names MUST conform to the param-name ABNF.
+		: Parameter values syntax MUST be well-defined (e.g., using ABNF, or a reference to the syntax of an existing parameter).
+		: Unregistered vendor-specific parameter extensions that are not commonly applicable and that are specific to the implementation details of the authorization server where they are used SHOULD utilize a vendor-specific prefix that is not likely to conflict with other registered values (e.g., begin with 'companyname_').
+	8.3. Defining New Authorization Grant Types (p.51)
+		: If the extension grant type requires additional token endpoint parameters, they MUST be registered in the OAuth Parameters registry as described by Section 11.2.
+	8.4. Defining New Authorization Endpoint Response Types (p.51)
+		: Response type names MUST conform to the response-type ABNF.
+	8.5. Defining Additional Error Codes (p.51)
+		: In cases where protocol extensions (i.e., access token types, extension parameters, or extension grant types) require additional error codes to be used with the authorization code grant error response (Section 4.1.2.1), the implicit grant error response (Section 4.2.2.1), the token error response (Section 5.2), or the resource access error response (Section 7.2), such error codes MAY be defined.
+		: Extension error codes MUST be registered (following the procedures in Section 11.4) if the extension they are used in conjunction with is a registered access token type, a registered endpoint parameter, or an extension grant type.
+		: Error codes used with unregistered extensions MAY be registered.
+		: Error codes MUST conform to the error ABNF.
+		: Error codes SHOULD be prefixed by an identifying name when possible.
+9. Native Applications (p.52)
+	: Native applications that use the authorization code grant type SHOULD do so without using client credentials, due to the native application's inability to keep client credentials confidential.
+10. Security Considerations (p.53)
+	10.1. Client Authentication (p.53)
+		: Web application clients MUST ensure confidentiality of client passwords and other client credentials.
+		: The authorization server MUST NOT issue client passwords or other client credentials to native application or user-agent-based application clients for the purpose of client authentication.
+		: The authorization server MAY issue a client password or other credentials for a specific installation of a native application client on a specific device.
+		: When client authentication is not possible, the authorization server SHOULD employ other means to validate the client's identity -- for example, by requiring the registration of the client redirection URI or enlisting the resource owner to confirm identity.
+	10.2. Client Impersonation (p.54)
+		: The authorization server MUST authenticate the client whenever possible.
+		: If the authorization server cannot authenticate the client due to the client's nature, the authorization server MUST require the registration of any redirection URI used for receiving authorization responses.
+		: If the authorization server cannot authenticate the client due to the client's nature, the authorization server SHOULD utilize other means to protect resource owners from such potentially malicious clients.
+		: The authorization server SHOULD enforce explicit resource owner authentication and provide the resource owner with information about the client and the requested authorization scope and lifetime.
+		: The authorization server SHOULD NOT process repeated authorization requests automatically (without active resource owner interaction) without authenticating the client or relying on other measures to ensure that the repeated request comes from the original client and not an impersonator.
+	10.3. Access Tokens (p.55)
+		: Access token credentials (as well as any confidential access token attributes) MUST be kept confidential in transit and storage, and only shared among the authorization server, the resource servers the access token is valid for, and the client to whom the access token is issued.
+		: Access token credentials MUST only be transmitted using TLS as described in Section 1.6 with server authentication as defined by [RFC2818].
+		: The authorization server MUST ensure that access tokens cannot be generated, modified, or guessed to produce valid access tokens by unauthorized parties.
+		: The client SHOULD request access tokens with the minimal scope necessary.
+		: The authorization server SHOULD take the client identity into account when choosing how to honor the requested scope.
+		: The authorization server MAY issue an access token with less rights than requested when choosing how to honor the requested scope.
+	10.4. Refresh Tokens (p.55)
+		: Authorization servers MAY issue refresh tokens to web application clients and native application clients.
+		: Refresh tokens MUST be kept confidential in transit and storage, and shared only among the authorization server and the client to whom the refresh tokens were issued.
+		: The authorization server MUST maintain the binding between a refresh token and the client to whom it was issued.
+		: Refresh tokens MUST only be transmitted using TLS as described in Section 1.6 with server authentication as defined by [RFC2818].
+		: The authorization server MUST verify the binding between the refresh token and client identity whenever the client identity can be authenticated.
+		: When client authentication is not possible, the authorization server SHOULD deploy other means to detect refresh token abuse.
+		: The authorization server MUST ensure that refresh tokens cannot be generated, modified, or guessed to produce valid refresh tokens by unauthorized parties.
+	10.5. Authorization Codes (p.56)
+		: The transmission of authorization codes SHOULD be made over a secure channel.
+		: The client SHOULD require the use of TLS with its redirection URI if the URI identifies a network resource.
+		: If the client relies on the authorization code for its own resource owner authentication, the client redirection endpoint MUST require the use of TLS.
+		: Authorization codes MUST be short lived and single-use.
+		: If the authorization server observes multiple attempts to exchange an authorization code for an access token, the authorization server SHOULD attempt to revoke all access tokens already granted based on the compromised authorization code.
+		: If the client can be authenticated, the authorization servers MUST authenticate the client and ensure that the authorization code was issued to the same client.
+	10.6. Authorization Code Redirection URI Manipulation (p.56)
+		: The authorization server MUST ensure that the redirection URI used to obtain the authorization code is identical to the redirection URI provided when exchanging the authorization code for an access token.
+		: The authorization server MUST require public clients to register their redirection URIs.
+		: The authorization server SHOULD require confidential clients to register their redirection URIs.
+		: If a redirection URI is provided in the request, the authorization server MUST validate it against the registered value.
+	10.7. Resource Owner Password Credentials (p.57)
+		: The authorization server and client SHOULD minimize use of resource owner password credentials grant type and utilize other grant types whenever possible.
+	10.8. Request Confidentiality (p.58)
+		: Access tokens, refresh tokens, resource owner passwords, and client credentials MUST NOT be transmitted in the clear.
+		: Authorization codes SHOULD NOT be transmitted in the clear.
+		: The "state" and "scope" parameters SHOULD NOT include sensitive client or resource owner information in plain text, as they can be transmitted over insecure channels or stored insecurely.
+	10.9. Ensuring Endpoint Authenticity (p.58)
+		: In order to prevent man-in-the-middle attacks, the authorization server MUST require the use of TLS with server authentication as defined by [RFC2818] for any request sent to the authorization and token endpoints.
+		: The client MUST validate the authorization server's TLS certificate as defined by [RFC6125] and in accordance with its requirements for server identity authentication.
+	10.10. Credentials-Guessing Attacks (p.58)
+		: The authorization server MUST prevent attackers from guessing access tokens, authorization codes, refresh tokens, resource owner passwords, and client credentials.
+		: The probability of an attacker guessing generated tokens (and other credentials not intended for handling by end-users) MUST be less than or equal to 2^(-128)
+		: The probability of an attacker guessing generated tokens (and other credentials not intended for handling by end-users) SHOULD be less than or equal to 2^(-160).
+		: The authorization server MUST utilize other means to protect credentials intended for end-user usage.
+	10.11. Phishing Attacks (p.58)
+	10.12. Cross-Site Request Forgery (p.59)
+		: The client MUST implement CSRF protection for its redirection URI.
+		: The client SHOULD utilize the "state" request parameter to deliver this value to the authorization server when making an authorization request.
+		: The binding value used for CSRF protection MUST contain a non-guessable value (as described in Section 10.10).
+		: The user-agent's authenticated state (e.g., session cookie, HTML5 local storage) MUST be kept in a location accessible only to the client and the user-agent (i.e., protected by same-origin policy).
+		: The authorization server MUST implement CSRF protection for its authorization endpoint and ensure that a malicious client cannot obtain authorization without the awareness and explicit consent of the resource owner.
+	10.13. Clickjacking (p.60)
+		: To prevent this form (Clickjacking) of attack, native applications SHOULD use external browsers instead of embedding browsers within the application when requesting end-user authorization.
+	10.14. Code Injection and Input Validation (p.60)
+		: The authorization server and client MUST sanitize (and validate when possible) any value received -- in particular, the value of the "state" and "redirect_uri" parameters.
+	10.15. Open Redirectors (p.60)
+	10.16. Misuse of Access Token to Impersonate Resource) Owner in Implicit Flow (p.61)
+		: Any specification that uses the authorization process as a form of delegated end-user authentication to the client (e.g., third-party sign-in service) MUST NOT use the implicit flow without additional security mechanisms that would enable the client to determine if the access token was issued for its use (e.g., audience- restricting the access token).
+11. IANA Considerations (p.62)
+	11.1. OAuth Access Token Types Registry (p.62)
+		11.1.1. Registration Template (p.62)
+			: New parameters MUST be separately registered in the OAuth Parameters registry as described by Section 11.2.
+	11.2. OAuth Parameters Registry (p.63)
+		11.2.1. Registration Template (p.63)
+		11.2.2. Initial Registry Contents (p.64)
+	11.3. OAuth Authorization Endpoint Response Types Registry (p.66)
+		11.3.1. Registration Template (p.66)
+		11.3.2. Initial Registry Contents (p.67)
+	11.4. OAuth Extensions Error Registry (p.67)
+		11.4.1. Registration Template (p.68)
+			: Values for the error name MUST NOT include characters outside the set %x20-21 / %x23-5B / %x5D-7E.
+12. References (p.68)
+	12.1. Normative References (p.68)
+	12.2. Informative References (p.70)
