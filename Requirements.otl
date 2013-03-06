@@ -218,8 +218,8 @@
 	4.5. Extension Grants (p.42)
 5. Issuing an Access Token (p.43)
 	5.1. Successful Response (p.43)
-		: The "access_token" parameter is REQUIRED in the response from a successful request.
-		: The "token_type" parameter is REQUIRED in the response from a successful request.
+		[X] The "access_token" parameter is REQUIRED in the response from a successful request.
+		[X]The "token_type" parameter is REQUIRED in the response from a successful request.
 		: The "expires_in" parameter is RECOMMENDED in the response from a successful request.
 		: The authorization server SHOULD provide the expiration time via other means or document default vaule if the "expires_in" parameter is omitted.
 		: The "refresh_token" parameter is OPTIONAL in the response from a successful request.

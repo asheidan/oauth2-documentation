@@ -8,15 +8,17 @@
 
 **** 4.1.2. Authorization Response
 
-> When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
+	 > When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
 
-As long as neither the protocol for accessing protected resources nor determining if an access token is valid is specified in the specification it's impossible to test if an access token is revoked or not.
+	 As long as neither the protocol for accessing protected resources nor determining if an access token is valid is specified in the specification it's impossible to test if an access token is revoked or not.
 
 ***** 4.1.2.1 Error Response
 
 > The authorization server SHOULD inform the resource owner on certain errors
 
 How? Phone call? Email? It's impossible to test if the authorization server really informs the user since the way to inform the user isn't specified.
+
+**** 4.1.3 Access Token Request
 
 *** 4.2. Implicit Grant
 
@@ -25,3 +27,9 @@ How? Phone call? Email? It's impossible to test if the authorization server real
 *** 5.1. Successful Response
 
 *** 5.2. Error Response
+
+** 7. Accessing Protected Resources
+
+> The resource server MUST validate the access token and ensure that it has not expired and that its scope covers the requested resource.
+
+The Authorization Server must validate the access token but not including the protocol for accessing protected resources in the specification makes it impossible to test this as well as makes "the most important step" not specified.
