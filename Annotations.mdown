@@ -1,66 +1,60 @@
-* Annotations and comments on the specification
+# Annotations and comments on the specification
 
-** 3. Protocol Endpoints
+## 3. Protocol Endpoints
 
-*** 3.3. Access Token Scope
+### 3.3. Access Token Scope
 
 Without defining any restrictions on the scope of access tokens or some common set of verbs/rights describing different scopes it is up to every implementation to define them.
 
 This makes it highly unlikely that two implementations chooses the same schema. That means that clients using two different authorization servers must customize the way each AS is handled (which scope to request, how to interpret when receiving a different scope than the one requested etc.).
 
-Not two of the existing large implementations I found (quick search, not sure all of these even conform to OAuth2) use the same values. Most use unique strings, each string representing one type of resource (not a scheme whith say, resource-right, ie. user_profile-read).
+Not two of the existing large implementations I found (quick search, not sure all of these even conform to OAuth2) use the same values. Most use unique strings, each string representing one type of resource (not a scheme whith say, resource-right, ie. userprofile-read).
 
 Existing implementations:
 
-- Facebook ::
+- Facebook  
 	Uses snake-case strings without prefix.
 	http://developers.facebook.com/docs/reference/dialogs/oauth/
-- Github ::
+- Github  
 	Snake-case resource, sometimes combined with another string separated from the first by a colon.
 	http://developer.github.com/v3/oauth/#scopes
-- Google ::
+- Google  
 	Uses URIs as values for the scope.
 	https://developers.google.com/accounts/docs/OAuth2Login#scopeparameter
-- Microsoft (Live Connect) ::
+- Microsoft (Live Connect)  
 	Uses snake-case strings prefixed with "wl.".
 	http://msdn.microsoft.com/en-us/library/live/hh243646.aspx
 
-** 4. Obtaining Authorization
+## 4. Obtaining Authorization
 
-*** 4.1. Authorization Code Grant
+### 4.1. Authorization Code Grant
 
-**** 4.1.1. Authorization Request
+#### 4.1.1. Authorization Request
 
-**** 4.1.2. Authorization Response
+#### 4.1.2. Authorization Response
 
-#+BEGIN_QUOTE
-When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
-#+END_QUOTE
+>	When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
 
 As long as neither the protocol for accessing protected resources nor determining if an access token is valid is specified in the specification it's impossible to test if an access token is revoked or not.
 
-***** 4.1.2.1 Error Response
+##### 4.1.2.1 Error Response
 
-#+BEGIN_QUOTE
-The authorization server SHOULD inform the resource owner on certain errors
-#+END_QUOTE
+>	The authorization server SHOULD inform the resource owner on certain errors
 
 How? Phone call? Email? It's impossible to test if the authorization server really informs the user since the way to inform the user isn't specified.
 
-**** 4.1.3 Access Token Request
+#### 4.1.3 Access Token Request
 
-*** 4.2. Implicit Grant
+### 4.2. Implicit Grant
 
-** 5. Issuing an Access Token
+## 5. Issuing an Access Token
 
-*** 5.1. Successful Response
+### 5.1. Successful Response
 
-*** 5.2. Error Response
+### 5.2. Error Response
 
-** 7. Accessing Protected Resources
+## 7. Accessing Protected Resources
 
-#+BEGIN_QUOTE
-The resource server MUST validate the access token and ensure that it has not expired and that its scope covers the requested resource.
-#+END_QUOTE
+>	The resource server MUST validate the access token and ensure that it has not expired and that its scope covers the requested resource.
 
 The Authorization Server must validate the access token but not including the protocol for accessing protected resources in the specification makes it impossible to test this as well as makes "the most important step" not specified.
