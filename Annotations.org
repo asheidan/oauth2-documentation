@@ -12,17 +12,18 @@ Not two of the existing large implementations I found (quick search, not sure al
 
 Existing implementations:
 
-Facebook
-	 Uses snake-case strings without prefix. http://developers.facebook.com/docs/reference/dialogs/oauth/
-
-Github
-	 Snake-case resource, sometimes combined with another string separated from the first by a colon. http://developer.github.com/v3/oauth/#scopes
-
-Google
-	 Uses URIs as values for the scope.  https://developers.google.com/accounts/docs/OAuth2Login#scopeparameter
-
-Microsoft (Live Connect)
-	 Uses snake-case strings prefixed with "wl.". http://msdn.microsoft.com/en-us/library/live/hh243646.aspx
+- Facebook ::
+	Uses snake-case strings without prefix.
+	http://developers.facebook.com/docs/reference/dialogs/oauth/
+- Github ::
+	Snake-case resource, sometimes combined with another string separated from the first by a colon.
+	http://developer.github.com/v3/oauth/#scopes
+- Google ::
+	Uses URIs as values for the scope.
+	https://developers.google.com/accounts/docs/OAuth2Login#scopeparameter
+- Microsoft (Live Connect) ::
+	Uses snake-case strings prefixed with "wl.".
+	http://msdn.microsoft.com/en-us/library/live/hh243646.aspx
 
 ** 4. Obtaining Authorization
 
@@ -32,13 +33,17 @@ Microsoft (Live Connect)
 
 **** 4.1.2. Authorization Response
 
-> When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
+#+BEGIN_QUOTE
+When an authorization code is used more than once, the Authorization Server SHOULD revoke (when possible) all tokens previously issued based on that authorization code.
+#+END_QUOTE
 
 As long as neither the protocol for accessing protected resources nor determining if an access token is valid is specified in the specification it's impossible to test if an access token is revoked or not.
 
 ***** 4.1.2.1 Error Response
 
-> The authorization server SHOULD inform the resource owner on certain errors
+#+BEGIN_QUOTE
+The authorization server SHOULD inform the resource owner on certain errors
+#+END_QUOTE
 
 How? Phone call? Email? It's impossible to test if the authorization server really informs the user since the way to inform the user isn't specified.
 
@@ -54,6 +59,8 @@ How? Phone call? Email? It's impossible to test if the authorization server real
 
 ** 7. Accessing Protected Resources
 
-> The resource server MUST validate the access token and ensure that it has not expired and that its scope covers the requested resource.
+#+BEGIN_QUOTE
+The resource server MUST validate the access token and ensure that it has not expired and that its scope covers the requested resource.
+#+END_QUOTE
 
 The Authorization Server must validate the access token but not including the protocol for accessing protected resources in the specification makes it impossible to test this as well as makes "the most important step" not specified.
