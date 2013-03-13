@@ -128,6 +128,7 @@
 					 Kolla implementation i oidc
 				[_] The "error" parameter is REQUIRED when the authorization server informs the client of a request failure for other reason than a missing or invalid redirection URI.
 					 Hard to test without something that generates that error
+					 This behavior is enforced during parsing of responses
 				[_] Values for the "error" parameter MUST NOT include characters outside the set 0%x20-21 / %x23-5B / %x5D-7E.
 				: The "error_description" parameter is OPTIONAL when informing the client about a request failure for other reason than a missing or invalid redirection URI.
 				: Values for the "error_description" parameter MUST NOT include characters outside the set 0%x20-21 / %x23-5B / %x5D-7E.
@@ -140,13 +141,17 @@
 				 How to remove a parameter from the outgoing message?
 				 Inherit?
 				 None is none
+				 Is really a test for the client and not the server
 			[_] The value of the "grant_type" parameter MUST be set to "authorization_code".
 				 What should the authorization server do if this parameter
 				 has something strange? Return an error response?
 			[_] The "code" parameter is REQUIRED when the client makes a request to the token endpoint.
 				 Return Error response if this parameter is missing?
 			[_] The "redirect_uri" parameter is REQUIRED when the client makes a request to the token endpoint and the "redirect_uri" parameter was included in the authorization request.
-			[_] If the "redirect_uri" parameter was included in the authorization request (as described in Section 4.1.1) their values MUST be identical.
+			[C] If the "redirect_uri" parameter was included in the authorization request (as described in Section 4.1.1) their values MUST be identical.
+				 CURRENT
+				 Either check previous responses (in list of protocol messages) or use hardcoded sequence which ensures that the server rejects requests that doesn't include the correct uri. Needs one more valid redirect_uri in both client and server config.
+				 Unclear what the result should be if they aren't the same.
 			[_] The "client_id" parameter is REQUIRED if the client is not authenticating with the authorization server as described in Section 3.2.1.
 			[_] If the client type is confidential or the client was issued client credentials (or assigned other authentication requirements), the client MUST authenticate with the authorization server as described in Section 3.2.1.
 			[_] The authorization server MUST require client authentication for confidential clients or for any client that was issued client credentials (or with other authentication requirements).

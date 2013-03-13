@@ -13,16 +13,16 @@ Not two of the existing large implementations I found (quick search, not sure al
 Existing implementations:
 
 - Facebook  
-	Uses snake-case strings without prefix.
+	Uses snake-case strings without prefix.  
 	http://developers.facebook.com/docs/reference/dialogs/oauth/
 - Github  
-	Snake-case resource, sometimes combined with another string separated from the first by a colon.
+	Snake-case resource, sometimes combined with another string separated from the first by a colon.  
 	http://developer.github.com/v3/oauth/#scopes
 - Google  
-	Uses URIs as values for the scope.
+	Uses URIs as values for the scope.  
 	https://developers.google.com/accounts/docs/OAuth2Login#scopeparameter
 - Microsoft (Live Connect)  
-	Uses snake-case strings prefixed with "wl.".
+	Uses snake-case strings prefixed with "wl.".  
 	http://msdn.microsoft.com/en-us/library/live/hh243646.aspx
 
 ## 4. Obtaining Authorization
@@ -41,7 +41,7 @@ As long as neither the protocol for accessing protected resources nor determinin
 
 >	The authorization server SHOULD inform the resource owner on certain errors
 
-How? Phone call? Email? It's impossible to test if the authorization server really informs the user since the way to inform the user isn't specified.
+How? Phone call? Email? It's impossible to test if the authorization server really informs the user since the way to inform the user isn't specified. It is possible to write a test that ensures that the end-user isn't redirected to the invalid redirect_uri.
 
 #### 4.1.3 Access Token Request
 
